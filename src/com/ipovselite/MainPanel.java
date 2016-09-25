@@ -74,6 +74,7 @@ public class MainPanel extends JPanel {
                     for (File file : files) {
                         System.out.println(file.getAbsolutePath());
                     }
+                    new FileTransferFrame(TransferAction.SEND, files, taddress.getText());
                     //clear files
                     fileCounter = 0;
                     for (JLabel fileName : lfiles) {
