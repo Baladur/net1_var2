@@ -15,32 +15,23 @@ public class Server {
         int port = 12345;
         ServerSocket serv;
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        String message = "";
-
         serv = new ServerSocket(port, 0, InetAddress.getByName(host));
 
 
         Socket s = serv.accept();
 
-        /*InputStream is = s.getInputStream();
-        byte buf[] = new byte[64*1024];
-        int r = is.read(buf);
-        String data = new String(buf, 0, r);
-        System.out.println(data);
 
-        message = br.readLine();
-        s.getOutputStream().write(message.getBytes());
-        s.close();*/
         byte[] size = new byte[Long.BYTES];
-
         byte[] name = new byte[256];
+
         int readName = s.getInputStream().read(name);
         String sname = new String(name, 0, readName);
         System.out.println(sname);
+
         s.getInputStream().read(size);
         long lsize = ByteBuffer.wrap(size).getLong();
         System.out.println("size = " + lsize);
+
         byte[] fileBuf = new byte[100];
         int read = 0;
         FileOutputStream fos = new FileOutputStream("download/" + sname);
@@ -49,10 +40,13 @@ public class Server {
 
         while ((read = s.getInputStream().read(fileBuf)) > 0) {
             //use Math.min because in the last iteration we dont get correct count of bytes, we get 100 bytes somewhy
-            fos.write(fileBuf, 0, Math.min(read, (int)lsize - totalRead));
+            read = Math.min(read, (int)lsize - totalRead);
+            fos.write(fileBuf, 0, read);
             totalRead += Math.min(read, (int)lsize - totalRead);
             System.out.println("read = " + read + ", totalRead = " + totalRead);
         }
+
+
         //InputStream name = s.getInputStream();
         /*byte buf[] = new byte[256];
         int r = name.read(buf);
