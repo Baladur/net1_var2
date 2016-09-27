@@ -32,7 +32,7 @@ public class Server {
         long lsize = ByteBuffer.wrap(size).getLong();
         System.out.println("size = " + lsize);
 
-        byte[] fileBuf = new byte[100];
+        byte[] fileBuf = new byte[1024];
         int read = 0;
         FileOutputStream fos = new FileOutputStream("download/" + sname);
         int totalRead = 0;

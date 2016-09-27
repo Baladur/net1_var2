@@ -7,76 +7,41 @@ import java.nio.file.*;
 
 public class Client {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         System.out.println("Client");
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        String message = "";
 
         String host = "127.0.0.1";
         int port = 12345;
-        Socket sock = null;
+        Socket sock = new Socket(host, port);
 
-        try {
-            sock = new Socket(host, port);
+        String actualFileName = "sharik.png";
+        String[] nullStr = {""};
 
-            /*message = br.readLine();
-            sock.getOutputStream().write(message.getBytes());
+        Path path = Paths.get(actualFileName, nullStr);
+        byte[] data = Files.readAllBytes(path);
+        String fileName = path.getFileName().toString();
 
-            InputStream is = sock.getInputStream();
-            byte buf[] = new byte[64*1024];
-            int r = is.read(buf);
-            String data = new String(buf, 0, r);
-            System.out.println(data);*/
+        File file = new File(fileName);
 
-            String actualFileName = "sharik.png";
-            String[] nullStr = {""};
+        //portion's size
+        int bufsize = 1024;
 
-            Path path = Paths.get(actualFileName, nullStr);
-            byte[] data = Files.readAllBytes(path);
-            String fileName = path.getFileName().toString();
+        //send name of file
+        sock.getOutputStream().write(fileName.getBytes());
+        //send length of file
+        sock.getOutputStream().write(ByteBuffer.allocate(Long.BYTES).putLong(file.length()).array());
 
-            File file = new File(fileName);
-
-            //this thing to read file by portions
-            BufferedReader fileReader = new BufferedReader(new FileReader(new File(fileName)));
-            //portion's size is 100 bytes (change it)
-            int bufsize = 100;
-            char[] buf = new char[bufsize];
-
-            //send name of file
-            sock.getOutputStream().write(actualFileName.getBytes());
-            //send length of file
-            sock.getOutputStream().write(ByteBuffer.allocate(Long.BYTES).putLong(file.length()).array());
-            int read = 0;
-
-            byte[] tmpData = new byte[bufsize];
-            for (int i = 0; i<data.length; i+=Math.min(bufsize, (int)(data.length - i))) {
-                for (int j=i; j<Math.min(i+bufsize, i+(int)(data.length - i)); j++) {
-                    tmpData[j-i] = data[j];
-                }
-                sock.getOutputStream().write(tmpData);
+        //send file
+        byte[] tmpData = new byte[bufsize];
+        for (int i = 0; i<data.length; i+=Math.min(bufsize, (int)(data.length - i))) {
+            for (int j=i; j<Math.min(i+bufsize, i+(int)(data.length - i)); j++) {
+                tmpData[j-i] = data[j];
             }
-
-            //use Math.min because in the last iteration we have to pass less than 100 bytes
-            /*for (long i = 0; i < file.length(); i += Math.min(bufsize, (int)(file.length() - i))) {
-
-                read = fileReader.read(buf);
-                sock.getOutputStream().write(new String(buf).getBytes());
-                System.out.println("Client:Sent " + (i + read));
-            }*/
-
-            /*sock.getOutputStream().write(fileName.getBytes());
-            sock.getOutputStream().write(String.valueOf(data.length).getBytes());
-            sock.getOutputStream().write(data);*/
-
+            sock.getOutputStream().write(tmpData);
         }
-        catch (IOException ex) {ex.printStackTrace();} finally {
-            try {
-                //don't forget to close fucken sockets
-                sock.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+
+        sock.close();
+
+
     }
 }
