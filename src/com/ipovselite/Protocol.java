@@ -10,9 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Protocol {
-    static void send(Socket sock) throws IOException {
+    static void send(Socket sock, String actualFileName) throws IOException {
 
-        String actualFileName = "sharik.png";
         String[] nullStr = {""};
 
         Path path = Paths.get(actualFileName, nullStr);
@@ -40,21 +39,24 @@ public class Protocol {
 
     }
 
-    static void receive (Socket sock) throws IOException{
-        byte[] size = new byte[Long.BYTES];
-        byte[] name = new byte[256];
+    static void receive (Socket sock, String saveFolder) throws IOException{
 
+        //receive name
+        byte[] name = new byte[256];
         int readName = sock.getInputStream().read(name);
         String sname = new String(name, 0, readName);
         System.out.println(sname);
 
+        //receive size
+        byte[] size = new byte[Long.BYTES];
         sock.getInputStream().read(size);
         long lsize = ByteBuffer.wrap(size).getLong();
         System.out.println("size = " + lsize);
 
+        //receive file
         byte[] fileBuf = new byte[1024];
         int read = 0;
-        FileOutputStream fos = new FileOutputStream("download/" + sname);
+        FileOutputStream fos = new FileOutputStream(saveFolder + "/" + sname);
         int totalRead = 0;
 
         while ((read = sock.getInputStream().read(fileBuf)) > 0) {

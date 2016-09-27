@@ -18,7 +18,7 @@ public class Server {
         serv = new ServerSocket(port, 0, InetAddress.getByName(host));
         Socket sock = serv.accept();
 
-        Protocol.receive(sock);
+        Protocol.receive(sock, "download");
 
         sock.close();
     }

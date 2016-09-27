@@ -14,7 +14,7 @@ public class Client {
         int port = 12345;
         Socket sock = new Socket(host, port);
 
-        Protocol.send(sock);
+        Protocol.send(sock, "sharik1.png");
 
         sock.close();
     }
