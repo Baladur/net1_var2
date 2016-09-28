@@ -22,7 +22,7 @@ public class Server {
 
         JProgressBar bar = new JProgressBar();
 
-        Protocol.receiveFile(sock, "download", bar);
+        Protocol.receiveFile(sock, true, "download", bar);
 
         sock.close();
     }

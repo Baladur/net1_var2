@@ -40,33 +40,38 @@ public class Protocol {
 
     }
 
-    public static void receiveFile (Socket sock, String saveFolder, JProgressBar progressBar) throws IOException{
+    public static void receiveFile (Socket sock, Boolean status, String saveFolder, JProgressBar progressBar) throws IOException{
 
-        //receive name
-        byte[] name = new byte[256];
-        int readName = sock.getInputStream().read(name);
-        String sname = new String(name, 0, readName);
-        System.out.println(sname);
+        if (status == true) {
+            System.out.println("Receiving");
 
-        //receive size
-        byte[] size = new byte[Long.BYTES];
-        sock.getInputStream().read(size);
-        long lsize = ByteBuffer.wrap(size).getLong();
-        System.out.println("size = " + lsize);
+            //receive name
+            byte[] name = new byte[256];
+            int readName = sock.getInputStream().read(name);
+            String sname = new String(name, 0, readName);
+            System.out.println(sname);
 
-        //receive file
-        byte[] fileBuf = new byte[1024];
-        int read = 0;
-        FileOutputStream fos = new FileOutputStream(saveFolder + "/" + sname);
-        int totalRead = 0;
+            //receive size
+            byte[] size = new byte[Long.BYTES];
+            sock.getInputStream().read(size);
+            long lsize = ByteBuffer.wrap(size).getLong();
+            System.out.println("size = " + lsize);
 
-        while ((read = sock.getInputStream().read(fileBuf)) > 0) {
-            //use Math.min because in the last iteration we dont get correct count of bytes, we get 100 bytes somewhy
-            read = Math.min(read, (int)lsize - totalRead);
-            fos.write(fileBuf, 0, read);
-            totalRead += Math.min(read, (int)lsize - totalRead);
-            System.out.println("read = " + read + ", totalRead = " + totalRead);
+            //receive file
+            byte[] fileBuf = new byte[1024];
+            int read = 0;
+            FileOutputStream fos = new FileOutputStream(saveFolder + "/" + sname);
+            int totalRead = 0;
+
+            while ((read = sock.getInputStream().read(fileBuf)) > 0) {
+                //use Math.min because in the last iteration we dont get correct count of bytes, we get 100 bytes somewhy
+                read = Math.min(read, (int) lsize - totalRead);
+                fos.write(fileBuf, 0, read);
+                totalRead += Math.min(read, (int) lsize - totalRead);
+                System.out.println("read = " + read + ", totalRead = " + totalRead);
+            }
+            fos.close();
         }
-        fos.close();
+        else System.out.println("Receiving is forbidden");
     }
 }
