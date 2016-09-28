@@ -9,17 +9,36 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Protocol {
-    public static void sendFile (Socket sock, String actualFileName, JProgressBar progressBar) throws IOException {
+
+    public static boolean sendRequest(Socket sock, List<File> files) throws IOException {
+        byte[] startRequestMsg = {'r', 'e', 'q'};
+        byte[] answer = new byte[1];
+        sock.getOutputStream().write(startRequestMsg);
+        sock.getOutputStream().write(ByteBuffer.allocate(Integer.BYTES).putInt(files.size()).array());
+        for (File file : files) {
+            String fileName = file.getName();
+            sock.getOutputStream().write(fileName.getBytes());
+        }
+        sock.getInputStream().read(answer);
+        if (answer[0] == 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    public static void sendFile (Socket sock, File file, JProgressBar progressBar) throws IOException {
 
         String[] nullStr = {""};
 
-        Path path = Paths.get(actualFileName, nullStr);
-        byte[] data = Files.readAllBytes(path);
-        String fileName = path.getFileName().toString();
+        //Path path = Paths.get(actualFileName, nullStr);
 
-        File file = new File(fileName);
+        String fileName = file.getName();
+        byte[] data = Files.readAllBytes(file.toPath());
 
         //portion's size
         int bufsize = 1024;
@@ -38,6 +57,26 @@ public class Protocol {
             sock.getOutputStream().write(tmpData);
         }
 
+    }
+
+    public static void answerForRequest(Socket sock, boolean answer) throws IOException {
+        byte[] answerBuf = new byte[0];
+        answerBuf[0] = answer ? (byte)1 : 0;
+        sock.getOutputStream().write(answerBuf);
+    }
+
+    public static List<String> processRequest(Socket sock) throws IOException {
+        List<String> fileNames = new ArrayList<>();
+        byte[] fileCountBuf = new byte[Integer.BYTES];
+        byte[] fileNameBuf = new byte[256];
+        sock.getInputStream().read(fileCountBuf);
+        int fileCount = ByteBuffer.wrap(fileCountBuf).getInt();
+        for (int i = 0; i < fileCount; i++) {
+            int read = sock.getInputStream().read(fileNameBuf);
+            fileNames.add(new String(fileNameBuf, 0, read));
+        }
+
+        return fileNames;
     }
 
     public static void receiveFile (Socket sock, Boolean status, String saveFolder, JProgressBar progressBar) throws IOException{
