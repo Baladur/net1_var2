@@ -22,6 +22,7 @@ public class Protocol {
         for (File file : files) {
             String fileName = file.getName();
             sock.getOutputStream().write(fileName.getBytes());
+            sock.getOutputStream().write(ByteBuffer.allocate(Long.BYTES).putLong(file.length()).array());
         }
         sock.getInputStream().read(answer);
         if (answer[0] == 0) {
@@ -65,18 +66,18 @@ public class Protocol {
         sock.getOutputStream().write(answerBuf);
     }
 
-    public static List<String> processRequest(Socket sock) throws IOException {
-        List<String> fileNames = new ArrayList<>();
+    public static void processRequest(Socket sock, List<String> fileNames, List<Integer> fileSizes) throws IOException {
         byte[] fileCountBuf = new byte[Integer.BYTES];
         byte[] fileNameBuf = new byte[256];
+        byte[] fileSizeBuf = new byte[Long.BYTES];
         sock.getInputStream().read(fileCountBuf);
         int fileCount = ByteBuffer.wrap(fileCountBuf).getInt();
         for (int i = 0; i < fileCount; i++) {
             int read = sock.getInputStream().read(fileNameBuf);
             fileNames.add(new String(fileNameBuf, 0, read));
+            read = sock.getInputStream().read(fileSizeBuf);
+            fileSizes.add(ByteBuffer.wrap(fileSizeBuf).getInt());
         }
-
-        return fileNames;
     }
 
     public static void receiveFile (Socket sock, Boolean status, String saveFolder, JProgressBar progressBar) throws IOException{

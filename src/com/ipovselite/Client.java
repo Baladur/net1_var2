@@ -46,14 +46,14 @@ public class Client {
         }
     }
 
-    public List<String> processRequest() throws Exception, IOException {
+    public void processRequest(List<String> fileNames, List<Integer> fileSizes) throws Exception, IOException {
         byte[] req = new byte[3];
         socket.getInputStream().read(req);
         if (req[0] != 'r' && req[1] != 'e' && req[2] != 'q') {
             throw new Exception("protocol");
         }
 
-        return Protocol.processRequest(this.socket);
+        Protocol.processRequest(this.socket, fileNames, fileSizes);
     }
 
     public void answerForRequest(boolean answer) throws IOException {

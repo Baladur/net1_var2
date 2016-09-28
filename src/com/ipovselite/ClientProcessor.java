@@ -2,6 +2,7 @@ package com.ipovselite;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,10 +18,12 @@ public class ClientProcessor extends Thread {
 
     public void run() {
         try {
-            List<String> fileNames = client.processRequest();
+            List<String> fileNames = new ArrayList<>();
+            List<Integer> fileSizes = new ArrayList<>();
+            client.processRequest(fileNames, fileSizes);
 
             //here roman creates Receive Window
-            FileTransferFrame frame = new FileTransferFrame(TransferAction.RECEIVE, fileNames, client);
+            FileTransferFrame frame = new FileTransferFrame(TransferAction.RECEIVE, fileNames, fileSizes, client);
 
         } catch (IOException ioe) {
             //process error!

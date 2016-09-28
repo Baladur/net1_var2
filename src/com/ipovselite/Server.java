@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.charset.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -14,7 +15,7 @@ public class Server {
 
     private ServerSocket serverSocket;
     private String downloadDir;
-    private List<ClientProcessor> clientProcessors;
+    private List<ClientProcessor> clientProcessors = new ArrayList<>();
 
     public Server(int pPort, String pDownloadDir) throws UnknownHostException, IOException {
         serverSocket = new ServerSocket(pPort, 0, InetAddress.getLocalHost());
@@ -26,29 +27,23 @@ public class Server {
     }
 
     public void waitForClients() throws IOException {
-        Thread clientProcessorsInspector = new Thread(new Runnable() {
+        Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
-                    for (ClientProcessor cp : clientProcessors) {
-                        if (cp.isFinished()) {
-                            try {
-                                cp.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                    try {
+                        Socket sock = serverSocket.accept();
+                        ClientProcessor clientProcessor = new ClientProcessor(sock);
+                        clientProcessors.add(clientProcessor);
+                        clientProcessor.start();
+                    }catch (IOException ioe) {
+                        ioe.printStackTrace();
                     }
                 }
             }
         });
-        clientProcessorsInspector.start();
-        while (true) {
-            Socket sock = serverSocket.accept();
-            ClientProcessor clientProcessor = new ClientProcessor(sock);
-            clientProcessors.add(clientProcessor);
-            clientProcessor.start();
-        }
+        t.start();
+
 
 
     }

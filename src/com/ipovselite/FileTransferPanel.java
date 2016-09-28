@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,8 +16,11 @@ public class FileTransferPanel extends JPanel {
     protected JLabel ltitle = new JLabel("");
     protected JButton ok = new JButton("OK");
     protected JButton cancel = new JButton("Прервать");
+    protected List<JProgressBar> progressBars = new ArrayList<>();
+    protected Client client;
 
-    public FileTransferPanel(int pWidth, int pHeight, List<String> pFiles, List<Integer> pSizes) {
+    public FileTransferPanel(int pWidth, int pHeight, List<String> pFiles, List<Integer> pSizes, Client pClient) {
+        client = pClient;
         setSize(pWidth, pHeight);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         JPanel ptitle = new JPanel();
@@ -27,12 +31,13 @@ public class FileTransferPanel extends JPanel {
         add(new JSeparator(SwingConstants.HORIZONTAL));
         JPanel pprogress = new JPanel();
         pprogress.setLayout(new GridLayout(pFiles.size(), 3));
-        for (int i = 0; i < pFiles.size(); ) {
-            pprogress.add(new JLabel(file));
-            JProgressBar pb = new JProgressBar(0, pSizes.get());
+        for (int i = 0; i < pFiles.size(); i++) {
+            pprogress.add(new JLabel(pFiles.get(i)));
+            JProgressBar pb = new JProgressBar(0, pSizes.get(i));
             pb.setValue(0);
             pb.setStringPainted(true);
             pprogress.add(pb);
+            progressBars.add(pb);
         }
         add(pprogress);
         JPanel pokCancel = new JPanel();
