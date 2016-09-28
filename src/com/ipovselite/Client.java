@@ -1,5 +1,6 @@
 package com.ipovselite;
 
+import javax.swing.*;
 import java.io.*;
 import java.net.Socket;
 import java.nio.ByteBuffer;
@@ -14,7 +15,9 @@ public class Client {
         int port = 12345;
         Socket sock = new Socket(host, port);
 
-        Protocol.send(sock, "sharik1.png");
+        JProgressBar bar = new JProgressBar();
+
+        Protocol.sendFile(sock, "sharik1.png", bar);
 
         sock.close();
     }

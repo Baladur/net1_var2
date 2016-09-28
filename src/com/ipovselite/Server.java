@@ -1,6 +1,8 @@
 package com.ipovselite;
 
 import sun.misc.IOUtils;
+
+import javax.swing.*;
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -18,7 +20,9 @@ public class Server {
         serv = new ServerSocket(port, 0, InetAddress.getByName(host));
         Socket sock = serv.accept();
 
-        Protocol.receive(sock, "download");
+        JProgressBar bar = new JProgressBar();
+
+        Protocol.receiveFile(sock, "download", bar);
 
         sock.close();
     }

@@ -1,5 +1,6 @@
 package com.ipovselite;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Protocol {
-    static void send(Socket sock, String actualFileName) throws IOException {
+    public static void sendFile (Socket sock, String actualFileName, JProgressBar progressBar) throws IOException {
 
         String[] nullStr = {""};
 
@@ -39,7 +40,7 @@ public class Protocol {
 
     }
 
-    static void receive (Socket sock, String saveFolder) throws IOException{
+    public static void receiveFile (Socket sock, String saveFolder, JProgressBar progressBar) throws IOException{
 
         //receive name
         byte[] name = new byte[256];
