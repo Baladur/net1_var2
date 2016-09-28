@@ -20,6 +20,7 @@ public class ClientProcessor extends Thread {
             List<String> fileNames = client.processRequest();
 
             //here roman creates Receive Window
+            FileTransferFrame frame = new FileTransferFrame(TransferAction.RECEIVE, fileNames, client);
 
         } catch (IOException ioe) {
             //process error!

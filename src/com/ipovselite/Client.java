@@ -11,6 +11,7 @@ import java.util.List;
 
 public class Client {
     private Socket socket;
+    private String downloadDir;
 
     public Client(String address, int port) throws IOException {
         socket = new Socket(address, port);
@@ -18,6 +19,11 @@ public class Client {
 
     public Client(Socket socket) {
         this.socket = socket;
+    }
+
+    public Client(Socket socket, String downloadDir) {
+        this.socket = socket;
+        this.downloadDir = downloadDir;
     }
 
     public void closeConnection() throws IOException {
@@ -34,6 +40,12 @@ public class Client {
         }
     }
 
+    public void receiveFiles(List<JProgressBar> progressBars) throws IOException {
+        for (int i = 0; i < progressBars.size(); i++) {
+            Protocol.receiveFile(this.socket, true, downloadDir, progressBars.get(i));
+        }
+    }
+
     public List<String> processRequest() throws Exception, IOException {
         byte[] req = new byte[3];
         socket.getInputStream().read(req);
@@ -46,5 +58,9 @@ public class Client {
 
     public void answerForRequest(boolean answer) throws IOException {
         Protocol.answerForRequest(this.socket, answer);
+    }
+
+    public String getAddress() {
+        return socket.getInetAddress().getHostAddress();
     }
 }

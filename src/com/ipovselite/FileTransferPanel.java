@@ -16,7 +16,7 @@ public class FileTransferPanel extends JPanel {
     protected JButton ok = new JButton("OK");
     protected JButton cancel = new JButton("Прервать");
 
-    public FileTransferPanel(int pWidth, int pHeight, List<File> pFiles) {
+    public FileTransferPanel(int pWidth, int pHeight, List<String> pFiles, List<Integer> pSizes) {
         setSize(pWidth, pHeight);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         JPanel ptitle = new JPanel();
@@ -27,9 +27,9 @@ public class FileTransferPanel extends JPanel {
         add(new JSeparator(SwingConstants.HORIZONTAL));
         JPanel pprogress = new JPanel();
         pprogress.setLayout(new GridLayout(pFiles.size(), 3));
-        for (File file : pFiles) {
-            pprogress.add(new JLabel(file.getName()));
-            JProgressBar pb = new JProgressBar(0, (int)file.length());
+        for (int i = 0; i < pFiles.size(); ) {
+            pprogress.add(new JLabel(file));
+            JProgressBar pb = new JProgressBar(0, pSizes.get());
             pb.setValue(0);
             pb.setStringPainted(true);
             pprogress.add(pb);
@@ -43,17 +43,5 @@ public class FileTransferPanel extends JPanel {
         add(pokCancel);
         ok.setEnabled(false);
         cancel.setEnabled(true);
-        ok.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("OK");
-            }
-        });
-        cancel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("Canceled");
-            }
-        });
     }
 }
