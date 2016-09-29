@@ -23,6 +23,7 @@ public class Protocol {
             String fileName = file.getName();
             sock.getOutputStream().write(fileName.getBytes());
             sock.getOutputStream().write(ByteBuffer.allocate(Long.BYTES).putLong(file.length()).array());
+            System.out.println("transfered name = " + fileName + " and size = " + file.length());
         }
         sock.getInputStream().read(answer);
         if (answer[0] == 0) {
@@ -70,13 +71,23 @@ public class Protocol {
         byte[] fileCountBuf = new byte[Integer.BYTES];
         byte[] fileNameBuf = new byte[256];
         byte[] fileSizeBuf = new byte[Long.BYTES];
+        System.out.println("before reading file count");
         sock.getInputStream().read(fileCountBuf);
         int fileCount = ByteBuffer.wrap(fileCountBuf).getInt();
+        System.out.println(fileCount);
         for (int i = 0; i < fileCount; i++) {
-            int read = sock.getInputStream().read(fileNameBuf);
-            fileNames.add(new String(fileNameBuf, 0, read));
-            read = sock.getInputStream().read(fileSizeBuf);
-            fileSizes.add(ByteBuffer.wrap(fileSizeBuf).getInt());
+            try {
+                int read = sock.getInputStream().read(fileNameBuf);
+                System.out.println(read);
+                String fileName = new String(fileNameBuf, 0, read);
+                fileNames.add(fileName);
+                System.out.println("filename = " + fileName);
+                int read2 = sock.getInputStream().read(fileSizeBuf);
+                System.out.println(read2);
+                fileSizes.add(ByteBuffer.wrap(fileSizeBuf).getInt());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

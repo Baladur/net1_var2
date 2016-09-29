@@ -52,6 +52,7 @@ public class Client {
         if (req[0] != 'r' && req[1] != 'e' && req[2] != 'q') {
             throw new Exception("protocol");
         }
+        System.out.println("Received req");
 
         Protocol.processRequest(this.socket, fileNames, fileSizes);
     }

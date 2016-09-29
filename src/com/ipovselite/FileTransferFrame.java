@@ -26,4 +26,8 @@ public class FileTransferFrame extends JFrame {
     public FileTransferPanel getPanel() {
         return this.panel;
     }
+
+    public List<JProgressBar> getProgressBars() {
+        return panel.getProgressBars();
+    }
 }

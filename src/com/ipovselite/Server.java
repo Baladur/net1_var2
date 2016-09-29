@@ -18,7 +18,7 @@ public class Server {
     private List<ClientProcessor> clientProcessors = new ArrayList<>();
 
     public Server(int pPort, String pDownloadDir) throws UnknownHostException, IOException {
-        serverSocket = new ServerSocket(pPort, 0, InetAddress.getLocalHost());
+        serverSocket = new ServerSocket(pPort);
     }
 
     public void shutDown() throws IOException {

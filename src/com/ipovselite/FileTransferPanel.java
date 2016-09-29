@@ -49,4 +49,8 @@ public class FileTransferPanel extends JPanel {
         ok.setEnabled(false);
         cancel.setEnabled(true);
     }
+
+    public List<JProgressBar> getProgressBars() {
+        return progressBars;
+    }
 }

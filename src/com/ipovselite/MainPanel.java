@@ -115,7 +115,12 @@ public class MainPanel extends JPanel {
                     }
                     try {
                         Client client = new Client(taddress.getText(), port);
-                        new FileTransferFrame(TransferAction.SEND, fileNames, fileSizes,client);
+                        //open wait dialog
+                        if (client.sendRequest(files)) {
+                            //close wait dialog
+                            FileTransferFrame ftf = new FileTransferFrame(TransferAction.SEND, fileNames, fileSizes, client);
+                            client.sendFiles(files, ftf.getProgressBars());
+                        }
                     } catch (IOException ioe) {
                         //process error!
                         ioe.printStackTrace();

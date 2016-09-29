@@ -18,6 +18,7 @@ public class ClientProcessor extends Thread {
 
     public void run() {
         try {
+            System.out.println("In run");
             List<String> fileNames = new ArrayList<>();
             List<Integer> fileSizes = new ArrayList<>();
             client.processRequest(fileNames, fileSizes);
