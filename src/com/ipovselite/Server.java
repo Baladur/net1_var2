@@ -18,21 +18,13 @@ public class Server {
     private String downloadDir;
     private List<ClientProcessor> clientProcessors = new ArrayList<>();
 
-    public Server(int pPort, String pDownloadDir) throws UnknownHostException, IOException {
-        System.out.println("Your Host addr: " + InetAddress.getLocalHost().getHostAddress());  // often returns "127.0.0.1"
-        Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
-        for (; n.hasMoreElements();)
-        {
-            NetworkInterface e = n.nextElement();
-
-            Enumeration<InetAddress> a = e.getInetAddresses();
-            for (; a.hasMoreElements();)
-            {
-                InetAddress addr = a.nextElement();
-                System.out.println("  " + addr.getHostAddress());
-            }
+    public Server(int pPort, String pDownloadDir) throws UnknownHostException, IOException, Exception {
+        String host = resolveHost();
+        if (host == null) {
+            throw new Exception("Unresolved host");
         }
-        serverSocket = new ServerSocket(pPort, 0, InetAddress.getByName("172.18.25.184"));
+        serverSocket = new ServerSocket(pPort, 0, InetAddress.getByName(host));
+        downloadDir = pDownloadDir;
     }
 
     public void shutDown() throws IOException {
@@ -47,10 +39,13 @@ public class Server {
                 while (true) {
                     try {
                         Socket sock = serverSocket.accept();
-                        ClientProcessor clientProcessor = new ClientProcessor(sock);
+                        ClientProcessor clientProcessor = new ClientProcessor(sock, downloadDir);
                         clientProcessors.add(clientProcessor);
                         clientProcessor.start();
-                    }catch (IOException ioe) {
+                    } catch (SocketException se) {
+                        break;
+                    }
+                    catch (IOException ioe) {
                         ioe.printStackTrace();
                     }
                 }
@@ -58,10 +53,33 @@ public class Server {
         });
         t.start();
 
+    }
 
+    private String resolveHost() throws SocketException {
+        Enumeration<NetworkInterface> n = NetworkInterface.getNetworkInterfaces();
+        for (; n.hasMoreElements();)
+        {
+            NetworkInterface e = n.nextElement();
 
+            Enumeration<InetAddress> a = e.getInetAddresses();
+            for (; a.hasMoreElements();)
+            {
+                InetAddress addr = a.nextElement();
+                String host = addr.getHostAddress();
+                if (!host.equals("127.0.0.1") && !host.startsWith("192.168")) {
+                    String[] sp = host.split("\\.");
+                    if (sp.length == 4) {
+                        return host;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
 
-
+    public void setDownloadDir(String downloadDir) {
+        this.downloadDir = downloadDir;
+    }
 }

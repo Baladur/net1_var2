@@ -19,7 +19,7 @@ public class FileTransferFrame extends JFrame {
         panel = pAction.equals(TransferAction.SEND) ? new SendPanel(getWidth(), getHeight(), pFiles, pSizes, pClient) : new ReceivePanel(getWidth(), getHeight(), pFiles, pSizes, pClient);
         panel.setDoubleBuffered(true);
         add(panel);
-        setVisible(true);
+        //setVisible(true);
 
     }
 
@@ -29,5 +29,9 @@ public class FileTransferFrame extends JFrame {
 
     public List<JProgressBar> getProgressBars() {
         return panel.getProgressBars();
+    }
+
+    public void render() {
+        setVisible(true);
     }
 }

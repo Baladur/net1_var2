@@ -12,8 +12,8 @@ public class ClientProcessor extends Thread {
     private Client client;
     private boolean isFinished = false;
 
-    public ClientProcessor(Socket sock) {
-        client = new Client(sock);
+    public ClientProcessor(Socket sock, String downloadDir) {
+        client = new Client(sock, downloadDir);
     }
 
     public void run() {
@@ -24,8 +24,11 @@ public class ClientProcessor extends Thread {
             client.processRequest(fileNames, fileSizes);
 
             //here roman creates Receive Window
-            FileTransferFrame frame = new FileTransferFrame(TransferAction.RECEIVE, fileNames, fileSizes, client);
 
+            FileTransferFrame frame = new FileTransferFrame(TransferAction.RECEIVE, fileNames, fileSizes, client);
+            frame.render();
+            Thread.sleep(500);
+            client.receiveFiles(fileNames, fileSizes, frame.getProgressBars());
         } catch (IOException ioe) {
             //process error!
         } catch (Exception e) {

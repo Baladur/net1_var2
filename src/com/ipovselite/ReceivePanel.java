@@ -13,39 +13,5 @@ public class ReceivePanel extends FileTransferPanel {
     public ReceivePanel(int pWidth, int pHeight, List<String> pFiles, List<Integer> pSizes, Client pClient) {
         super(pWidth, pHeight, pFiles, pSizes, pClient);
         ltitle.setText("Получение файлов от " + pClient.getAddress());
-        client = pClient;
-        ok.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    client.answerForRequest(true);
-                    client.receiveFiles(progressBars);
-                } catch (IOException ioe) {
-                    //process error!
-                    ioe.printStackTrace();
-                }
-
-            }
-        });
-        cancel.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    client.answerForRequest(false);
-
-                } catch (IOException ioe) {
-                    //process error!
-                    ioe.printStackTrace();
-                } finally {
-                    try {
-                        client.closeConnection();
-                    } catch (IOException ioe) {
-                        //process error!
-                        ioe.printStackTrace();
-                    }
-                }
-
-            }
-        });
     }
 }

@@ -61,6 +61,11 @@ public class MainPanel extends JPanel {
                 } catch (IOException ioe) {
                     //process error!
                     ioe.printStackTrace();
+                } catch (Exception uhe) {
+                    if (uhe.getMessage().equals("Unresolved host")) {
+                        //process error!
+                        uhe.printStackTrace();
+                    }
                 }
 
             }
@@ -71,7 +76,10 @@ public class MainPanel extends JPanel {
                 String dir = getDirFromFileChooser();
                 if (dir != null) {
                     downloadDir = dir;
-                    lselectDownloadDir.setText(downloadDir);
+                    if (server != null) {
+                        server.setDownloadDir(dir);
+                    }
+                    lselectDownloadDir.setText(dir);
                 }
             }
         });
@@ -115,15 +123,18 @@ public class MainPanel extends JPanel {
                     }
                     try {
                         Client client = new Client(taddress.getText(), port);
-                        //open wait dialog
-                        if (client.sendRequest(files)) {
-                            //close wait dialog
-                            FileTransferFrame ftf = new FileTransferFrame(TransferAction.SEND, fileNames, fileSizes, client);
-                            client.sendFiles(files, ftf.getProgressBars());
-                        }
+                        client.sendRequest(files);
+                        final FileTransferFrame ftf = new FileTransferFrame(TransferAction.SEND, fileNames, fileSizes, client);
+                        ftf.render();
+                        client.sendFiles(files, ftf.getProgressBars());
                     } catch (IOException ioe) {
                         //process error!
                         ioe.printStackTrace();
+                    } catch (Exception pe) {
+                        if (pe.getMessage().equals("protocol")) {
+                            //process error!
+                            pe.printStackTrace();
+                        }
                     }
                     //clear files
                     fileCounter = 0;
@@ -203,6 +214,6 @@ public class MainPanel extends JPanel {
 
         File file = fileChooser.getSelectedFile();
         System.out.print("Filename " + file.getAbsolutePath());
-        return file.getName();
+        return file.getAbsolutePath();
     }
 }

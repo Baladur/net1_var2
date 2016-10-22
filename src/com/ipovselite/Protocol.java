@@ -14,30 +14,41 @@ import java.util.List;
 
 public class Protocol {
 
-    public static boolean sendRequest(Socket sock, List<File> files) throws IOException {
+    public static void sendRequest(Socket sock, List<File> files) throws IOException, Exception {
         byte[] startRequestMsg = {'r', 'e', 'q'};
-        byte[] answer = new byte[1];
+        byte[] ansBuf = new byte[3];
+        byte[] answerBuf = new byte[1];
         sock.getOutputStream().write(startRequestMsg);
         sock.getOutputStream().write(ByteBuffer.allocate(Integer.BYTES).putInt(files.size()).array());
         for (File file : files) {
             String fileName = file.getName();
+            sock.getOutputStream().write(ByteBuffer.allocate(Integer.BYTES).putInt(fileName.length()).array());
             sock.getOutputStream().write(fileName.getBytes());
             sock.getOutputStream().write(ByteBuffer.allocate(Long.BYTES).putLong(file.length()).array());
-            System.out.println("transfered name = " + fileName + " and size = " + file.length());
+            int read1 = sock.getInputStream().read(answerBuf);
+            System.out.println("transfered name = " + fileName + " and size = " + file.length() + new String(answerBuf, 0, read1));
         }
-        sock.getInputStream().read(answer);
-        if (answer[0] == 0) {
-            return false;
+
+        //int read = sock.getInputStream().read(answerBuf);
+
+        /*if (ansBuf[0] != 'a' && ansBuf[1] != 'n' && ansBuf[2] != 's') {
+            System.out.println(new String(ansBuf, 0, 3));
+            System.out.println(ansBuf[0] + ansBuf[1] + ansBuf[2]);
+            throw new Exception("protocol");
         } else {
+            System.out.println(new String(ansBuf, 0, 3));
+        }*/
+        //sock.getInputStream().read(answerBuf);
+        /*if (sanswer.equals("n")) {
+            return false;
+        } else if (sanswer.equals("y")) {
             return true;
-        }
+        } else {
+            throw new Exception("protocol");
+        }*/
     }
 
     public static void sendFile (Socket sock, File file, JProgressBar progressBar) throws IOException {
-
-        String[] nullStr = {""};
-
-        //Path path = Paths.get(actualFileName, nullStr);
 
         String fileName = file.getName();
         byte[] data = Files.readAllBytes(file.toPath());
@@ -45,84 +56,86 @@ public class Protocol {
         //portion's size
         int bufsize = 1024;
 
-        //send name of file
-        sock.getOutputStream().write(fileName.getBytes());
-        //send length of file
-        sock.getOutputStream().write(ByteBuffer.allocate(Long.BYTES).putLong(file.length()).array());
-
         //send file
-        byte[] tmpData = new byte[bufsize];
+        byte[] tmpData = new byte[Math.min(bufsize, data.length)];
+        int totalSent = 0;
         for (int i = 0; i<data.length; i+=Math.min(bufsize, (int)(data.length - i))) {
             for (int j=i; j<Math.min(i+bufsize, i+(int)(data.length - i)); j++) {
                 tmpData[j-i] = data[j];
             }
+
             sock.getOutputStream().write(tmpData);
+            totalSent += Math.min(bufsize, data.length - i);
+            progressBar.setValue((int)(totalSent * 100 / data.length));
+            System.out.println("Percent ready = " + (totalSent * 100 / data.length) + " %");
+            progressBar.repaint();
         }
 
     }
 
-    public static void answerForRequest(Socket sock, boolean answer) throws IOException {
-        byte[] answerBuf = new byte[0];
-        answerBuf[0] = answer ? (byte)1 : 0;
-        sock.getOutputStream().write(answerBuf);
+    public static void answerForRequest(Socket sock, boolean banswer) throws IOException {
+        //byte[] ansBuf = {'a', 'n', 's'};
+        byte[] answerBuf = new byte[1];
+        String sanswer = banswer ? "y" : "n";
+
+        System.out.println(answerBuf[0]);
+        //sock.getOutputStream().write(ansBuf);
+        sock.getOutputStream().write(sanswer.getBytes());
     }
 
     public static void processRequest(Socket sock, List<String> fileNames, List<Integer> fileSizes) throws IOException {
         byte[] fileCountBuf = new byte[Integer.BYTES];
-        byte[] fileNameBuf = new byte[256];
         byte[] fileSizeBuf = new byte[Long.BYTES];
         System.out.println("before reading file count");
         sock.getInputStream().read(fileCountBuf);
         int fileCount = ByteBuffer.wrap(fileCountBuf).getInt();
         System.out.println(fileCount);
         for (int i = 0; i < fileCount; i++) {
-            try {
-                int read = sock.getInputStream().read(fileNameBuf);
-                System.out.println(read);
-                String fileName = new String(fileNameBuf, 0, read);
-                fileNames.add(fileName);
-                System.out.println("filename = " + fileName);
-                int read2 = sock.getInputStream().read(fileSizeBuf);
-                System.out.println(read2);
-                fileSizes.add(ByteBuffer.wrap(fileSizeBuf).getInt());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            byte[] fileNameLengthBuf = new byte[Integer.BYTES];
+            int read = sock.getInputStream().read(fileNameLengthBuf);
+            byte[] fileNameBuf = new byte[ByteBuffer.wrap(fileNameLengthBuf).getInt()];
+            read = sock.getInputStream().read(fileNameBuf);
+            System.out.println(read);
+            String fileName = new String(fileNameBuf, 0, read);
+            fileNames.add(fileName);
+            System.out.println("filename = " + fileName);
+            read = sock.getInputStream().read(fileSizeBuf);
+            System.out.println("size = " + ByteBuffer.wrap(fileSizeBuf).getLong());
+            fileSizes.add((int)ByteBuffer.wrap(fileSizeBuf).getLong());
+
+            sock.getOutputStream().write("f".getBytes());
         }
+        System.out.println("All file names and sizes are received");
     }
 
-    public static void receiveFile (Socket sock, Boolean status, String saveFolder, JProgressBar progressBar) throws IOException{
+    public static void receiveFile (Socket sock, String fileName, long fileSize, String saveFolder, JProgressBar progressBar) throws IOException{
+        System.out.println("Receiving");
 
-        if (status == true) {
-            System.out.println("Receiving");
+        //receive name length
+        //receive name
 
-            //receive name
-            byte[] name = new byte[256];
-            int readName = sock.getInputStream().read(name);
-            String sname = new String(name, 0, readName);
-            System.out.println(sname);
+        //receive size
 
-            //receive size
-            byte[] size = new byte[Long.BYTES];
-            sock.getInputStream().read(size);
-            long lsize = ByteBuffer.wrap(size).getLong();
-            System.out.println("size = " + lsize);
+        //receive file
+        byte[] fileBuf = new byte[1024];
+        int read = 0;
+        FileOutputStream fos = new FileOutputStream(saveFolder + "/" + fileName);
+        int totalRead = 0;
 
-            //receive file
-            byte[] fileBuf = new byte[1024];
-            int read = 0;
-            FileOutputStream fos = new FileOutputStream(saveFolder + "/" + sname);
-            int totalRead = 0;
-
-            while ((read = sock.getInputStream().read(fileBuf)) > 0) {
-                //use Math.min because in the last iteration we dont get correct count of bytes, we get 100 bytes somewhy
-                read = Math.min(read, (int) lsize - totalRead);
-                fos.write(fileBuf, 0, read);
-                totalRead += Math.min(read, (int) lsize - totalRead);
-                System.out.println("read = " + read + ", totalRead = " + totalRead);
-            }
-            fos.close();
+        for (; totalRead < fileSize; totalRead += Math.min(read, (int) fileSize - totalRead)) {
+            //use Math.min because in the last iteration we dont get correct count of bytes, we get 100 bytes somewhy
+            read = sock.getInputStream().read(fileBuf);
+            read = Math.min(read, (int) fileSize - totalRead);
+            fos.write(fileBuf, 0, read);
+            //totalRead += Math.min(read, (int) fileSize - totalRead);
+            System.out.println("read = " + read + ", totalRead = " + totalRead);
+            progressBar.setValue((int)Math.round((double)(totalRead  * 100 / fileSize)));
+            progressBar.repaint();
+            System.out.println("Percent ready = " + (totalRead  * 100 / fileSize) + " %");
         }
-        else System.out.println("Receiving is forbidden");
+        progressBar.setValue(100);
+        progressBar.repaint();
+        fos.close();
+        System.out.println("File is received!");
     }
 }

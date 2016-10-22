@@ -30,8 +30,8 @@ public class Client {
         socket.close();
     }
 
-    public boolean sendRequest(List<File> files) throws IOException {
-        return Protocol.sendRequest(this.socket, files);
+    public void sendRequest(List<File> files) throws IOException, Exception {
+        Protocol.sendRequest(this.socket, files);
     }
 
     public void sendFiles(List<File> files, List<JProgressBar> progressBars) throws IOException {
@@ -40,9 +40,9 @@ public class Client {
         }
     }
 
-    public void receiveFiles(List<JProgressBar> progressBars) throws IOException {
+    public void receiveFiles(List<String> fileNames, List<Integer> fileSizes, List<JProgressBar> progressBars) throws IOException {
         for (int i = 0; i < progressBars.size(); i++) {
-            Protocol.receiveFile(this.socket, true, downloadDir, progressBars.get(i));
+            Protocol.receiveFile(this.socket, fileNames.get(i), fileSizes.get(i), downloadDir, progressBars.get(i));
         }
     }
 

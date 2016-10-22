@@ -30,10 +30,11 @@ public class FileTransferPanel extends JPanel {
         add(ptitle);
         add(new JSeparator(SwingConstants.HORIZONTAL));
         JPanel pprogress = new JPanel();
-        pprogress.setLayout(new GridLayout(pFiles.size(), 3));
+        pprogress.setLayout(new GridLayout(pFiles.size(), 4));
         for (int i = 0; i < pFiles.size(); i++) {
             pprogress.add(new JLabel(pFiles.get(i)));
-            JProgressBar pb = new JProgressBar(0, pSizes.get(i));
+            pprogress.add(new JLabel(pSizes.get(i) + " bytes"));
+            JProgressBar pb = new JProgressBar(0, 100);
             pb.setValue(0);
             pb.setStringPainted(true);
             pprogress.add(pb);
