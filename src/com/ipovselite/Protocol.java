@@ -2,8 +2,10 @@ package com.ipovselite;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
@@ -48,9 +50,9 @@ public class Protocol {
         }*/
     }
 
-    public static void sendFile (Socket sock, File file, JProgressBar progressBar) throws IOException {
+    public static void sendFile (Socket sock, File file, JProgressBar progressBar,  JLabel time) throws IOException {
 
-        String fileName = file.getName();
+        /*String fileName = file.getName();
         byte[] data = Files.readAllBytes(file.toPath());
 
         //portion's size
@@ -69,7 +71,27 @@ public class Protocol {
             progressBar.setValue((int)(totalSent * 100 / data.length));
             System.out.println("Percent ready = " + (totalSent * 100 / data.length) + " %");
             progressBar.repaint();
+        }*/
+        int bufSize = 1024;
+        byte[] tmpData = new byte[Math.min(bufSize, (int)file.length())];
+        FileInputStream fis = new FileInputStream(file);
+        int totalSent = 0;
+        int read = 0;
+        AppTimer timer = new AppTimer(time);
+        timer.start();
+        for (int i = 0; i < file.length(); i += Math.min(bufSize, (int)(file.length() - i))) {
+            read = fis.read(tmpData);
+            sock.getOutputStream().write(tmpData);
+            totalSent += Math.min(bufSize, file.length() - i);
+            double dtotalSent = totalSent / file.length() * 100;
+            progressBar.setValue((int)(dtotalSent));
+            long ltotalSent = totalSent * 100;
+            System.out.println("Percent ready = " + dtotalSent + " %");
+            progressBar.repaint();
+
         }
+        timer.stop();
+        fis.close();
 
     }
 
@@ -108,7 +130,7 @@ public class Protocol {
         System.out.println("All file names and sizes are received");
     }
 
-    public static void receiveFile (Socket sock, String fileName, long fileSize, String saveFolder, JProgressBar progressBar) throws IOException{
+    public static void receiveFile (Socket sock, String fileName, long fileSize, String saveFolder, JProgressBar progressBar, JLabel time) throws IOException{
         System.out.println("Receiving");
 
         //receive name length
@@ -121,18 +143,29 @@ public class Protocol {
         int read = 0;
         FileOutputStream fos = new FileOutputStream(saveFolder + "/" + fileName);
         int totalRead = 0;
-
+        AppTimer timer = new AppTimer(time);
+        timer.start();
         for (; totalRead < fileSize; totalRead += Math.min(read, (int) fileSize - totalRead)) {
             //use Math.min because in the last iteration we dont get correct count of bytes, we get 100 bytes somewhy
             read = sock.getInputStream().read(fileBuf);
             read = Math.min(read, (int) fileSize - totalRead);
             fos.write(fileBuf, 0, read);
             //totalRead += Math.min(read, (int) fileSize - totalRead);
-            System.out.println("read = " + read + ", totalRead = " + totalRead);
-            progressBar.setValue((int)Math.round((double)(totalRead  * 100 / fileSize)));
+            long ltotalRead = totalRead * 100;
+            long maxVal = Long.MAX_VALUE;
+            int totalReadPercent = (int)(ltotalRead / fileSize);
+            if (ltotalRead > fileSize) {
+                System.out.println("dtotalRead = " + ltotalRead);
+            }
+
+            //BigDecimal totalReadPercent = dtotalRead.divide(new BigDecimal(fileSize), 5, BigDecimal.ROUND_CEILING);
+            System.out.println("read = " + read + ", totalRead = " + totalReadPercent);
+
+            progressBar.setValue((int)totalReadPercent);
             progressBar.repaint();
-            System.out.println("Percent ready = " + (totalRead  * 100 / fileSize) + " %");
+            System.out.println("Percent ready = " + totalReadPercent + " %");
         }
+        timer.stop();
         progressBar.setValue(100);
         progressBar.repaint();
         fos.close();

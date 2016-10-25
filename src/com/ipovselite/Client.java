@@ -34,15 +34,15 @@ public class Client {
         Protocol.sendRequest(this.socket, files);
     }
 
-    public void sendFiles(List<File> files, List<JProgressBar> progressBars) throws IOException {
+    public void sendFiles(List<File> files, List<JProgressBar> progressBars, List<JLabel> times) throws IOException {
         for (int i = 0; i < files.size(); i++) {
-            Protocol.sendFile(this.socket, files.get(i), progressBars.get(i));
+            Protocol.sendFile(this.socket, files.get(i), progressBars.get(i), times.get(i));
         }
     }
 
-    public void receiveFiles(List<String> fileNames, List<Integer> fileSizes, List<JProgressBar> progressBars) throws IOException {
+    public void receiveFiles(List<String> fileNames, List<Integer> fileSizes, List<JProgressBar> progressBars, List<JLabel> times) throws IOException {
         for (int i = 0; i < progressBars.size(); i++) {
-            Protocol.receiveFile(this.socket, fileNames.get(i), fileSizes.get(i), downloadDir, progressBars.get(i));
+            Protocol.receiveFile(this.socket, fileNames.get(i), fileSizes.get(i), downloadDir, progressBars.get(i), times.get(i));
         }
     }
 

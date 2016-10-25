@@ -27,8 +27,8 @@ public class ClientProcessor extends Thread {
 
             FileTransferFrame frame = new FileTransferFrame(TransferAction.RECEIVE, fileNames, fileSizes, client);
             frame.render();
-            Thread.sleep(500);
-            client.receiveFiles(fileNames, fileSizes, frame.getProgressBars());
+            //Thread.sleep(500);
+            client.receiveFiles(fileNames, fileSizes, frame.getProgressBars(), frame.getTimeLabels());
         } catch (IOException ioe) {
             //process error!
         } catch (Exception e) {

@@ -23,11 +23,13 @@ public class MainPanel extends JPanel {
     JLabel laddress = new JLabel("Адрес");
     JLabel lport = new JLabel("Порт");
     JLabel lselectDownloadDir = new JLabel("");
+    JLabel lserverPort = new JLabel("Порт приёма");
     List<JLabel> lfiles = new ArrayList<>();
-    JTextField taddress = new JTextField();
-    JTextField tport = new JTextField();
-    JButton bselectFile = new JButton("Выберите файлы");
-    JButton bselectDownloadDir = new JButton("Выберите папку для сохранения файлов");
+    JTextField taddress = new JTextField(15);
+    JTextField tport = new JTextField(4);
+    JTextField tserverPort = new JTextField(4);
+    JButton bselectFile = new JButton("Выбрать файл");
+    JButton bselectDownloadDir = new JButton("Выбрать папку скачки");
     JButton bsend = new JButton("Отправить");
     JCheckBox cbserverOnOff = new JCheckBox();
     JLabel lserverOnOff = new JLabel("Приём файлов включен");
@@ -38,18 +40,19 @@ public class MainPanel extends JPanel {
 
     public MainPanel(int pWidth, int pHeight) {
         this.setSize(pWidth, pHeight);
-        psend.setSize(pWidth / 4 * 3, pHeight);
-        preceive.setSize(pWidth/ 4, pHeight);
+        psend.setSize(pWidth / 2, pHeight);
+        preceive.setSize(pWidth/ 2, pHeight);
         cbserverOnOff.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     if (cbserverOnOff.isSelected()) {
                         //start server
                         if (downloadDir == null) {
                             //process error!
                         }
-                        server = new Server(12345, downloadDir);
+                        int serverPort = Integer.parseInt(tserverPort.getText());
+                        server = new Server(serverPort, downloadDir);
                         server.waitForClients();
                         System.out.println("Server started!");
 
@@ -61,11 +64,13 @@ public class MainPanel extends JPanel {
                 } catch (IOException ioe) {
                     //process error!
                     ioe.printStackTrace();
-                } catch (Exception uhe) {
-                    if (uhe.getMessage().equals("Unresolved host")) {
+                } catch (AppException ae) {
+                    if (ae.getMessage().equals("Unresolved host")) {
                         //process error!
-                        uhe.printStackTrace();
+                        ae.printStackTrace();
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
             }
@@ -126,7 +131,7 @@ public class MainPanel extends JPanel {
                         client.sendRequest(files);
                         final FileTransferFrame ftf = new FileTransferFrame(TransferAction.SEND, fileNames, fileSizes, client);
                         ftf.render();
-                        client.sendFiles(files, ftf.getProgressBars());
+                        client.sendFiles(files, ftf.getProgressBars(), ftf.getTimeLabels());
                     } catch (IOException ioe) {
                         //process error!
                         ioe.printStackTrace();
@@ -169,19 +174,44 @@ public class MainPanel extends JPanel {
         psend.add(pselectFile);
         psend.add(new JPanel().add(bsend));
         preceive.setLayout(new BoxLayout(preceive, BoxLayout.Y_AXIS));
+
+        JPanel preceiveTitle = new JPanel();
+        JPanel pserverOnOff = new JPanel();
+        JPanel pOnOff = new JPanel();
+        JPanel pserverPort = new JPanel();
+        JPanel pselectDownloadDir = new JPanel();
+        preceiveTitle.setSize(getWidth() / 2, getHeight() / 4);
+        pOnOff.setSize(getWidth() /  2, getHeight() / 4);
+        pOnOff.setMaximumSize(new Dimension(getWidth() /  2, getHeight() / 4));
+        pOnOff.setLayout(new BoxLayout(pOnOff, BoxLayout.X_AXIS));
+        pserverOnOff.setSize(getWidth() / 2, getHeight() /4 * 3);
+        pserverOnOff.setMaximumSize(new Dimension(getWidth() / 2, getHeight() /4 * 3));
+        pserverOnOff.setLayout(new BoxLayout(pserverOnOff, BoxLayout.Y_AXIS));
+        pserverPort.setMaximumSize(new Dimension(getWidth() / 2, getHeight() / 4));
+        pserverPort.setLayout(new BoxLayout(pserverPort, BoxLayout.X_AXIS));
+        pselectDownloadDir.setSize(getWidth() / 2, getHeight() / 4);
+        pselectDownloadDir.setMaximumSize(new Dimension(getWidth() / 2, getHeight() / 4));
+        pselectDownloadDir.setLayout(new GridLayout(2, 1));
+        lserverPort.setMaximumSize(new Dimension(getWidth() / 4, getHeight() / 4));
+        tserverPort.setMaximumSize(new Dimension(getWidth() / 4, getHeight() / 4));
+        pserverPort.add(lserverPort);
+        pserverPort.add(tserverPort);
+        pserverOnOff.add(pserverPort);
+        pselectDownloadDir.add(bselectDownloadDir);
+        pselectDownloadDir.add(lselectDownloadDir);
+        pserverOnOff.add(pselectDownloadDir);
+        pOnOff.add(lserverOnOff);
+        pOnOff.add(cbserverOnOff);
+        pserverOnOff.add(pOnOff);
+        preceiveTitle.add(lreceive);
         preceive.add(new JPanel().add(lreceive));
         preceive.add(new JSeparator(SwingConstants.HORIZONTAL));
-        JPanel pserverOnOff = new JPanel();
-        pserverOnOff.setSize(getWidth() / 2, getHeight() / 8);
-        pserverOnOff.setLayout(new BoxLayout(pserverOnOff, BoxLayout.Y_AXIS));
-        pserverOnOff.add(lserverOnOff);
-        pserverOnOff.add(cbserverOnOff);
-        pserverOnOff.add(bselectDownloadDir);
-        pserverOnOff.add(lselectDownloadDir);
         preceive.add(pserverOnOff);
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         add(psend);
-        add(new JSeparator(SwingConstants.VERTICAL));
+        JSeparator svertical = new JSeparator(SwingConstants.VERTICAL);
+        svertical.setMaximumSize(new Dimension(1, getHeight()));
+        add(svertical);
         add(preceive);
     }
 

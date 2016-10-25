@@ -17,6 +17,7 @@ public class FileTransferPanel extends JPanel {
     protected JButton ok = new JButton("OK");
     protected JButton cancel = new JButton("Прервать");
     protected List<JProgressBar> progressBars = new ArrayList<>();
+    private List<JLabel> timeLabels = new ArrayList<>();
     protected Client client;
 
     public FileTransferPanel(int pWidth, int pHeight, List<String> pFiles, List<Integer> pSizes, Client pClient) {
@@ -35,10 +36,13 @@ public class FileTransferPanel extends JPanel {
             pprogress.add(new JLabel(pFiles.get(i)));
             pprogress.add(new JLabel(pSizes.get(i) + " bytes"));
             JProgressBar pb = new JProgressBar(0, 100);
+            JLabel ltime = new JLabel("00:00:00");
             pb.setValue(0);
             pb.setStringPainted(true);
             pprogress.add(pb);
+            pprogress.add(ltime);
             progressBars.add(pb);
+            timeLabels.add(ltime);
         }
         add(pprogress);
         JPanel pokCancel = new JPanel();
@@ -53,5 +57,9 @@ public class FileTransferPanel extends JPanel {
 
     public List<JProgressBar> getProgressBars() {
         return progressBars;
+    }
+
+    public List<JLabel> getTimeLabels() {
+        return timeLabels;
     }
 }

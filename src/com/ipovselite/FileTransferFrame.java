@@ -31,6 +31,8 @@ public class FileTransferFrame extends JFrame {
         return panel.getProgressBars();
     }
 
+    public List<JLabel> getTimeLabels() { return panel.getTimeLabels(); }
+
     public void render() {
         setVisible(true);
     }
