@@ -17,11 +17,12 @@ public class Server {
     private ServerSocket serverSocket;
     private String downloadDir;
     private List<ClientProcessor> clientProcessors = new ArrayList<>();
+    private String host;
 
-    public Server(int pPort, String pDownloadDir) throws UnknownHostException, IOException, Exception {
-        String host = resolveHost();
+    public Server(int pPort, String pDownloadDir) throws UnknownHostException, IOException, AppException {
+        host = resolveHost();
         if (host == null) {
-            throw new Exception("Unresolved host");
+            throw new AppException("Unresolved host");
         }
         serverSocket = new ServerSocket(pPort, 0, InetAddress.getByName(host));
         downloadDir = pDownloadDir;
@@ -43,9 +44,18 @@ public class Server {
                         clientProcessors.add(clientProcessor);
                         clientProcessor.start();
                     } catch (SocketException se) {
+                        //Message.show("Приём файлов прерван!");
+                        for (ClientProcessor cp : clientProcessors) {
+                            try {
+                                cp.getClient().closeConnection();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         break;
                     }
                     catch (IOException ioe) {
+                        Message.show("Ошибка соединения!");
                         ioe.printStackTrace();
                     }
                 }
@@ -82,4 +92,6 @@ public class Server {
     public void setDownloadDir(String downloadDir) {
         this.downloadDir = downloadDir;
     }
+
+    public String getHost() { return host; }
 }

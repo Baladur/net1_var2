@@ -2,6 +2,7 @@ package com.ipovselite;
 
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class ClientProcessor extends Thread {
     }
 
     public void run() {
+        FileTransferFrame frame = null;
         try {
             System.out.println("In run");
             List<String> fileNames = new ArrayList<>();
@@ -25,21 +27,39 @@ public class ClientProcessor extends Thread {
 
             //here roman creates Receive Window
 
-            FileTransferFrame frame = new FileTransferFrame(TransferAction.RECEIVE, fileNames, fileSizes, client);
+            frame = new FileTransferFrame(TransferAction.RECEIVE, fileNames, fileSizes, client);
             frame.render();
             //Thread.sleep(500);
             client.receiveFiles(fileNames, fileSizes, frame.getProgressBars(), frame.getTimeLabels());
-        } catch (IOException ioe) {
-            //process error!
-        } catch (Exception e) {
-            if (e.getMessage().equals("protocol")) {
-                //process protocol error!
+        } catch (SocketException se) {
+            if (se.getMessage().startsWith("Socket closed")) {
+                Message.show("Приём файлов прерван!");
+            } else {
+                se.printStackTrace();
             }
+        }
+        catch (IOException ioe) {
+            //process error!
+            Message.show("Ошибка соединения!");
+            ioe.printStackTrace();
+        } catch (AppException ae) {
+            if (ae.getMessage().equals("protocol")) {
+                //process protocol error!
+                Message.show("Ошибка приложения!");
+            } else {
+                ae.printStackTrace();
+            }
+        } catch (Exception e) {
+          e.printStackTrace();
         } finally {
             try {
                 client.closeConnection();
+                isFinished = true;
+                frame.setVisible(false);
             } catch (IOException e) {
                 //process error!
+                Message.show("Ошибка при закрытии приёма!");
+                e.printStackTrace();
             }
         }
     }

@@ -6,7 +6,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.ConnectException;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ public class MainPanel extends JPanel {
     JLabel laddress = new JLabel("Адрес");
     JLabel lport = new JLabel("Порт");
     JLabel lselectDownloadDir = new JLabel("");
+    JLabel lserverHost = new JLabel("");
     JLabel lserverPort = new JLabel("Порт приёма");
     List<JLabel> lfiles = new ArrayList<>();
     JTextField taddress = new JTextField(15);
@@ -52,11 +55,20 @@ public class MainPanel extends JPanel {
                 try {
                     if (cbserverOnOff.isSelected()) {
                         //start server
+                        if (tserverPort.getText().trim().length() == 0) {
+                            cbserverOnOff.setSelected(false);
+                            Message.show("Не указан порт приёма!");
+                            return;
+                        }
                         if (downloadDir == null) {
                             //process error!
+                            cbserverOnOff.setSelected(false);
+                            Message.show("Не указана папка скачки!");
+                            return;
                         }
                         int serverPort = Integer.parseInt(tserverPort.getText());
                         server = new Server(serverPort, downloadDir);
+                        lserverHost.setText(server.getHost());
                         server.waitForClients();
                         System.out.println("Server started!");
 
@@ -65,13 +77,33 @@ public class MainPanel extends JPanel {
                         server.shutDown();
                         System.out.println("Server stopped!");
                     }
+                } catch (NumberFormatException nfe) {
+                    cbserverOnOff.setSelected(false);
+                    Message.show("Порт приёма коряво записан!");
+                } catch (IllegalArgumentException iae) {
+                    cbserverOnOff.setSelected(false);
+                    if (iae.getMessage().startsWith("Port value out of range")) {
+                        cbserverOnOff.setSelected(false);
+                        Message.show("Порт вне диапазона (1 - 65 535)!");
+                    } else {
+                        iae.printStackTrace();
+                    }
+                } catch (BindException be) {
+                    if (be.getMessage().startsWith("Address already in use")) {
+                        cbserverOnOff.setSelected(false);
+                        Message.show("Порт занят!");
+                    }
                 } catch (IOException ioe) {
                     //process error!
+                    Message.show("Ошибка соединения!");
                     ioe.printStackTrace();
                 } catch (AppException ae) {
+                    cbserverOnOff.setSelected(false);
                     if (ae.getMessage().equals("Unresolved host")) {
                         //process error!
-                        ae.printStackTrace();
+                        Message.show("Публичный IP-адрес неизвестен!");
+                    } else if (ae.getMessage().equals("protocol")) {
+                        Message.show("Ошибка приложения!");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -92,7 +124,7 @@ public class MainPanel extends JPanel {
                 }
             }
         });
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < FILES_LIMIT; i++) {
             lfiles.add(new JLabel(""));
         }
         bselectFile.addActionListener(new ActionListener() {
@@ -118,6 +150,7 @@ public class MainPanel extends JPanel {
             public void actionPerformed(ActionEvent actionEvent) {
                 //send file
                 int port = 0;
+                FileTransferFrame ftf = null;
                 try {
                     if (taddress.getText().trim().length() == 0) {
                         Message.show("Адрес получателя не указан!");
@@ -142,14 +175,13 @@ public class MainPanel extends JPanel {
 
                         Client client = new Client(taddress.getText(), port);
                         client.sendRequest(files);
-                        final FileTransferFrame ftf = new FileTransferFrame(TransferAction.SEND, fileNames, fileSizes, client);
+                        ftf = new FileTransferFrame(TransferAction.SEND, fileNames, fileSizes, client);
                         ftf.render();
                         client.sendFiles(files, ftf.getProgressBars(), ftf.getTimeLabels());
                         //clear files
                         fileCounter = 0;
                         for (JLabel fileName : lfiles) {
                             fileName.setText("");
-
                         }
                         files.clear();
                     }
@@ -169,10 +201,20 @@ public class MainPanel extends JPanel {
                     } else {
                         ce.printStackTrace();
                     }
+                } catch (SocketException se) {
+                    if (se.getMessage().startsWith("Connection reset by peer") || se.getMessage().startsWith("Software caused connection abort")) {
+                        ftf.setVisible(false);
+                        Message.show("Получатель закрыл соединение!");
+                    } else {
+                        se.printStackTrace();
+                    }
                 } catch (UnknownHostException ukhe) {
                     Message.show("Неизвестный адрес " + taddress.getText());
                     ukhe.printStackTrace();
                 } catch (IOException ioe) {
+                    if (ftf != null) {
+                        ftf.setVisible(false);
+                    }
                     Message.show("Ошибка соединения!");
                     ioe.printStackTrace();
                 } catch (AppException ae) {
@@ -213,6 +255,9 @@ public class MainPanel extends JPanel {
         JPanel pOnOff = new JPanel();
         JPanel pserverPort = new JPanel();
         JPanel pselectDownloadDir = new JPanel();
+        JPanel pserverHost = new JPanel();
+        pserverHost.setMaximumSize(new Dimension(getWidth() / 2, getHeight() / 4));
+        pserverHost.setLayout(new GridLayout(1,2));
         preceiveTitle.setSize(getWidth() / 2, getHeight() / 4);
         pOnOff.setSize(getWidth() /  2, getHeight() / 4);
         pOnOff.setMaximumSize(new Dimension(getWidth() /  2, getHeight() / 4));
@@ -229,6 +274,7 @@ public class MainPanel extends JPanel {
         tserverPort.setMaximumSize(new Dimension(getWidth() / 4, getHeight() / 4));
         pserverPort.add(lserverPort);
         pserverPort.add(tserverPort);
+        pserverOnOff.add(pserverHost);
         pserverOnOff.add(pserverPort);
         pselectDownloadDir.add(bselectDownloadDir);
         pselectDownloadDir.add(lselectDownloadDir);
@@ -239,6 +285,10 @@ public class MainPanel extends JPanel {
         preceiveTitle.add(lreceive);
         preceive.add(new JPanel().add(lreceive));
         preceive.add(new JSeparator(SwingConstants.HORIZONTAL));
+
+        pserverHost.add(new JLabel("Адрес приёма"));
+        pserverHost.add(lserverHost);
+
         preceive.add(pserverOnOff);
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         add(psend);
