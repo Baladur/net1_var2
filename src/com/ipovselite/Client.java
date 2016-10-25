@@ -30,7 +30,7 @@ public class Client {
         socket.close();
     }
 
-    public void sendRequest(List<File> files) throws IOException, Exception {
+    public void sendRequest(List<File> files) throws IOException, AppException {
         Protocol.sendRequest(this.socket, files);
     }
 

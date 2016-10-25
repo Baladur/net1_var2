@@ -16,7 +16,7 @@ import java.util.List;
 
 public class Protocol {
 
-    public static void sendRequest(Socket sock, List<File> files) throws IOException, Exception {
+    public static void sendRequest(Socket sock, List<File> files) throws IOException, AppException {
         byte[] startRequestMsg = {'r', 'e', 'q'};
         byte[] ansBuf = new byte[3];
         byte[] answerBuf = new byte[1];

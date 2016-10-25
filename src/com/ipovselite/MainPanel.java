@@ -6,6 +6,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -13,6 +15,7 @@ import java.util.ArrayList;
  * Created by roman on 25.09.2016.
  */
 public class MainPanel extends JPanel {
+    static final int FILES_LIMIT = 5;
     JPanel psend = new JPanel();
     JPanel preceive = new JPanel();
     JSeparator ssend = new JSeparator();
@@ -37,6 +40,7 @@ public class MainPanel extends JPanel {
     int fileCounter = 0;
     String downloadDir;
     Server server;
+
 
     public MainPanel(int pWidth, int pHeight) {
         this.setSize(pWidth, pHeight);
@@ -95,6 +99,10 @@ public class MainPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 //select file
+                if (files.size() == FILES_LIMIT) {
+                    Message.show("Нельзя передавать за раз больше " + FILES_LIMIT + " файлов!");
+                    return;
+                }
                 File file = getFileFromFileChooser();
                 if (file != null) {
                     fileCounter++;
@@ -104,50 +112,75 @@ public class MainPanel extends JPanel {
 
             }
         });
+        bselectFile.setToolTipText("За раз можно отправить не более " + FILES_LIMIT + " файлов");
         bsend.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(ActionEvent actionEvent) {
                 //send file
-                if (files.size() == 0) {
-                    System.err.println("No file selected!");
-                } else {
-                    int port = 0;
-                    try {
+                int port = 0;
+                try {
+                    if (taddress.getText().trim().length() == 0) {
+                        Message.show("Адрес получателя не указан!");
+                        return;
+                    }
+                    if (tport.getText().trim().length() == 0) {
+                        Message.show("Порт получателя не указан!");
+                        return;
+                    }
+                    if (files.size() == 0) {
+                        Message.show("Не выбрано ни одного файла!");
+                    } else {
                         port = Integer.parseInt(tport.getText());
-                    } catch (NumberFormatException nfe) {
-                        //process error!
-                        nfe.printStackTrace();
-                    }
-                    System.out.println("Sending files:");
-                    List<String> fileNames = new ArrayList<String>();
-                    List<Integer> fileSizes = new ArrayList<Integer>();
-                    for (File file : files) {
-                        System.out.println(file.getAbsolutePath());
-                        fileNames.add(file.getName());
-                        fileSizes.add((int)file.length());
-                    }
-                    try {
+                        System.out.println("Sending files:");
+                        List<String> fileNames = new ArrayList<String>();
+                        List<Integer> fileSizes = new ArrayList<Integer>();
+                        for (File file : files) {
+                            System.out.println(file.getAbsolutePath());
+                            fileNames.add(file.getName());
+                            fileSizes.add((int) file.length());
+                        }
+
                         Client client = new Client(taddress.getText(), port);
                         client.sendRequest(files);
                         final FileTransferFrame ftf = new FileTransferFrame(TransferAction.SEND, fileNames, fileSizes, client);
                         ftf.render();
                         client.sendFiles(files, ftf.getProgressBars(), ftf.getTimeLabels());
-                    } catch (IOException ioe) {
-                        //process error!
-                        ioe.printStackTrace();
-                    } catch (Exception pe) {
-                        if (pe.getMessage().equals("protocol")) {
-                            //process error!
-                            pe.printStackTrace();
-                        }
-                    }
-                    //clear files
-                    fileCounter = 0;
-                    for (JLabel fileName : lfiles) {
-                        fileName.setText("");
+                        //clear files
+                        fileCounter = 0;
+                        for (JLabel fileName : lfiles) {
+                            fileName.setText("");
 
+                        }
+                        files.clear();
                     }
-                    files.clear();
+                } catch (NumberFormatException nfe) {
+                    Message.show("Порт коряво записан!");
+                } catch (IllegalArgumentException iae) {
+                    if (iae.getMessage().startsWith("port out of range")) {
+                        Message.show("Порт вне диапазона (1 - 65 535)!");
+                    } else {
+                        iae.printStackTrace();
+                    }
+                } catch (ConnectException ce) {
+                    if (ce.getMessage().startsWith("Connection refused")) {
+                        Message.show("Не удалось подключиться к " + taddress.getText() + ":" + port + "!");
+                    } else if (ce.getMessage().startsWith("Connection timed out")){
+                        Message.show("Тайм аут подключения!");
+                    } else {
+                        ce.printStackTrace();
+                    }
+                } catch (UnknownHostException ukhe) {
+                    Message.show("Неизвестный адрес " + taddress.getText());
+                    ukhe.printStackTrace();
+                } catch (IOException ioe) {
+                    Message.show("Ошибка соединения!");
+                    ioe.printStackTrace();
+                } catch (AppException ae) {
+                    Message.show("Ошибка приложения!");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    System.out.println("Finished!");
                 }
 
             }
