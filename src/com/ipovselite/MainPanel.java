@@ -68,7 +68,7 @@ public class MainPanel extends JPanel {
                             Message.show("Не указана папка скачки!");
                             return;
                         }
-                        int serverPort = Integer.parseInt(tserverPort.getText());
+                        int serverPort = Integer.parseInt(tserverPort.getText().trim());
                         server = new Server(tserverHost.getText(), serverPort, downloadDir);
                         tserverHost.setText(server.getHost());
                         server.waitForClients();
@@ -196,7 +196,7 @@ public class MainPanel extends JPanel {
                     if (files.size() == 0) {
                         Message.show("Не выбрано ни одного файла!");
                     } else {
-                        port = Integer.parseInt(tport.getText());
+                        port = Integer.parseInt(tport.getText().trim());
                         System.out.println("Sending files:");
                         List<String> fileNames = new ArrayList<String>();
                         List<Integer> fileSizes = new ArrayList<Integer>();
