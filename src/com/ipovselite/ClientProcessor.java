@@ -55,7 +55,8 @@ public class ClientProcessor extends Thread {
             try {
                 client.closeConnection();
                 isFinished = true;
-                frame.setVisible(false);
+                frame.setOkEnabled();
+                //frame.setVisible(false);
             } catch (IOException e) {
                 //process error!
                 Message.show("Ошибка при закрытии приёма!");

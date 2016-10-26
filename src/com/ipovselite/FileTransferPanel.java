@@ -49,11 +49,9 @@ public class FileTransferPanel extends JPanel {
         pokCancel.setSize(getWidth(), getHeight()/4);
         pokCancel.setLayout(new BoxLayout(pokCancel, BoxLayout.X_AXIS));
         pokCancel.add(ok);
-        pokCancel.add(cancel);
-        add(pokCancel);
         ok.setEnabled(false);
-        cancel.setEnabled(true);
     }
+
 
     public List<JProgressBar> getProgressBars() {
         return progressBars;
@@ -62,4 +60,6 @@ public class FileTransferPanel extends JPanel {
     public List<JLabel> getTimeLabels() {
         return timeLabels;
     }
+
+    public JButton getOkButton() { return ok; }
 }

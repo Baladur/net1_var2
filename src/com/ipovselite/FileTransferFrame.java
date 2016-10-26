@@ -2,6 +2,8 @@ package com.ipovselite;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.List;
 
@@ -17,6 +19,12 @@ public class FileTransferFrame extends JFrame {
         setLocation(d.width / 4, d.height / 4);
         setSize(d.width / 3, d.height/4);
         panel = pAction.equals(TransferAction.SEND) ? new SendPanel(getWidth(), getHeight(), pFiles, pSizes, pClient) : new ReceivePanel(getWidth(), getHeight(), pFiles, pSizes, pClient);
+        panel.getOkButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(false);
+            }
+        });
         panel.setDoubleBuffered(true);
         add(panel);
         //setVisible(true);
@@ -35,5 +43,9 @@ public class FileTransferFrame extends JFrame {
 
     public void render() {
         setVisible(true);
+    }
+
+    public void setOkEnabled() {
+        panel.getOkButton().setEnabled(true);
     }
 }

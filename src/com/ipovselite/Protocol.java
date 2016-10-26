@@ -83,10 +83,9 @@ public class Protocol {
             read = fis.read(tmpData);
             sock.getOutputStream().write(tmpData);
             totalSent += Math.min(bufSize, file.length() - i);
-            double dtotalSent = totalSent / file.length() * 100;
-            progressBar.setValue((int)(dtotalSent));
             long ltotalSent = totalSent * 100;
-            System.out.println("Percent ready = " + dtotalSent + " %");
+            long totalSentPercent = ltotalSent / file.length();
+            progressBar.setValue((int)(totalSentPercent));
             progressBar.repaint();
 
         }
@@ -153,7 +152,7 @@ public class Protocol {
             //totalRead += Math.min(read, (int) fileSize - totalRead);
             long ltotalRead = totalRead * 100;
             long maxVal = Long.MAX_VALUE;
-            int totalReadPercent = (int)(ltotalRead / fileSize);
+            long totalReadPercent = ltotalRead / fileSize;
             if (ltotalRead > fileSize) {
                 System.out.println("dtotalRead = " + ltotalRead);
             }
