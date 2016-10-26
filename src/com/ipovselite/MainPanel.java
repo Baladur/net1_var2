@@ -70,7 +70,7 @@ public class MainPanel extends JPanel {
                         }
                         int serverPort = Integer.parseInt(tserverPort.getText());
                         server = new Server(tserverHost.getText(), serverPort, downloadDir);
-                        lserverHost.setText(server.getHost());
+                        tserverHost.setText(server.getHost());
                         server.waitForClients();
                         System.out.println("Server started!");
 
