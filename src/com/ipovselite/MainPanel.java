@@ -34,7 +34,9 @@ public class MainPanel extends JPanel {
     JTextField taddress = new JTextField(15);
     JTextField tport = new JTextField(4);
     JTextField tserverPort = new JTextField(4);
+    JTextField tserverHost = new JTextField();
     JButton bselectFile = new JButton("Выбрать файл");
+    JButton bcancelSelectFile = new JButton("Отменить выбор файлов");
     JButton bselectDownloadDir = new JButton("Выбрать папку скачки");
     JButton bsend = new JButton("Отправить");
     JCheckBox cbserverOnOff = new JCheckBox();
@@ -67,7 +69,7 @@ public class MainPanel extends JPanel {
                             return;
                         }
                         int serverPort = Integer.parseInt(tserverPort.getText());
-                        server = new Server(serverPort, downloadDir);
+                        server = new Server(tserverHost.getText(), serverPort, downloadDir);
                         lserverHost.setText(server.getHost());
                         server.waitForClients();
                         System.out.println("Server started!");
@@ -93,6 +95,9 @@ public class MainPanel extends JPanel {
                         cbserverOnOff.setSelected(false);
                         Message.show("Порт занят!");
                     }
+                } catch (UnknownHostException ukhe) {
+                    cbserverOnOff.setSelected(false);
+                    Message.show("Неизвестный адрес " + tserverHost.getText());
                 } catch (IOException ioe) {
                     //process error!
                     Message.show("Ошибка соединения!");
@@ -137,14 +142,42 @@ public class MainPanel extends JPanel {
                 }
                 File file = getFileFromFileChooser();
                 if (file != null) {
+                    if (!file.exists()) {
+                        Message.show("Файл '" + file.getAbsolutePath() + "' не существует!");
+                        return;
+                    }
                     fileCounter++;
+                    boolean found = false;
+                    for (int i = 0; i < files.size(); i++) {
+                        if (file.getAbsolutePath().equals(files.get(i).getAbsolutePath())) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        lfiles.get(fileCounter-1).setText(file.getName());
+                        files.add(file);
+                    } else {
+                        Message.show("Файл '" + file.getAbsolutePath() + "' уже выбран!");
+                        fileCounter--;
+                    }
+                } else {
+                    return;
                 }
-                lfiles.get(fileCounter-1).setText(file.getName());
-                files.add(file);
-
             }
         });
         bselectFile.setToolTipText("За раз можно отправить не более " + FILES_LIMIT + " файлов");
+        bcancelSelectFile.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //clear files
+                fileCounter = 0;
+                for (JLabel fileName : lfiles) {
+                    fileName.setText("");
+                }
+                files.clear();
+            }
+        });
         bsend.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
@@ -247,7 +280,11 @@ public class MainPanel extends JPanel {
             pselectFile.add(fileName);
         }
         psend.add(pselectFile);
-        psend.add(new JPanel().add(bsend));
+        JPanel psendCancelSelect = new JPanel();
+        psendCancelSelect.add(bcancelSelectFile);
+        psendCancelSelect.add(bsend);
+        psend.add(psendCancelSelect);
+        //psend.add(new JPanel().add(bsend));
         preceive.setLayout(new BoxLayout(preceive, BoxLayout.Y_AXIS));
 
         JPanel preceiveTitle = new JPanel();
@@ -287,8 +324,8 @@ public class MainPanel extends JPanel {
         preceive.add(new JSeparator(SwingConstants.HORIZONTAL));
 
         pserverHost.add(new JLabel("Адрес приёма"));
-        pserverHost.add(lserverHost);
-
+        //pserverHost.add(lserverHost);
+        pserverHost.add(tserverHost);
         preceive.add(pserverOnOff);
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         add(psend);

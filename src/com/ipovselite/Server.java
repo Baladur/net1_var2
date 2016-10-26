@@ -19,10 +19,14 @@ public class Server {
     private List<ClientProcessor> clientProcessors = new ArrayList<>();
     private String host;
 
-    public Server(int pPort, String pDownloadDir) throws UnknownHostException, IOException, AppException {
-        host = resolveHost();
-        if (host == null) {
-            throw new AppException("Unresolved host");
+    public Server(String pHost, int pPort, String pDownloadDir) throws UnknownHostException, IOException, AppException {
+        if (pHost == null || pHost.trim().length() == 0) {
+            host = resolveHost();
+            if (host == null) {
+                throw new AppException("Unresolved host");
+            }
+        } else {
+            host = pHost;
         }
         serverSocket = new ServerSocket(pPort, 0, InetAddress.getByName(host));
         downloadDir = pDownloadDir;
